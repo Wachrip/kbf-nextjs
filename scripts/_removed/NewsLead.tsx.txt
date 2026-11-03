@@ -1,0 +1,25 @@
+// из src/components/ui/News.tsx
+/** Главная новость на мобилке: фото с затемнением, бейдж «Главное», время чтения. */
+export function NewsLead({ post, now }: { post: PostLike; now: number }) {
+  const meta = [formatPostDate(post.publishedAt, now, DEFAULT_LOCALE), post.minutes ? `${post.minutes} мин чтения` : ""]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <Link href={paths.post(post.slug)} style={{ display: "block" }}>
+      <PhotoBlock src={post.coverUrl} sizes="100vw" priority only="mobile" card minHeight={300}>
+        <span className="k-badge" style={{ alignSelf: "flex-start" }}>
+          Главное
+        </span>
+        <span className="k-title-xl" role="heading" aria-level={2} style={{ color: "var(--on-dark)" }}>
+          {post.title}
+        </span>
+        {meta ? (
+          <span className="k-meta" style={{ color: "var(--on-dark-2)" }}>
+            {meta}
+          </span>
+        ) : null}
+      </PhotoBlock>
+    </Link>
+  );
+}
+

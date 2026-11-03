@@ -1,0 +1,16 @@
+// из src/components/ui/Media.tsx
+/** Миниатюра площадки (квадрат). Нет фото — первая буква названия. */
+export function GymThumb({ name, photoUrl, size = 52 }: { name: string; photoUrl?: string; size?: number }) {
+  return (
+    <span className="k-media k-media--square" style={box(size)}>
+      {photoUrl ? (
+        <Img src={photoUrl} alt="" sizes={`${size}px`} />
+      ) : (
+        <span className="k-initials" aria-hidden>
+          {firstLetter(name)}
+        </span>
+      )}
+    </span>
+  );
+}
+

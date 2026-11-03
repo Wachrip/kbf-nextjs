@@ -1,0 +1,42 @@
+// из src/components/ui/Heads.tsx
+/**
+ * Тёмная шапка раздела: заголовок display-lg, подзаголовок (живое число), справа (десктоп) или
+ * снизу (мобилка) — чипы или плитки. Кнопка «Назад» — над заголовком в одной колонке:
+ * в макете TeamList она стояла третьим элементом ряда и заголовок уезжал в центр (правка).
+ */
+export function PageHead({
+  title,
+  sub,
+  aside,
+  back,
+  stack = false,
+}: {
+  title: string;
+  sub?: ReactNode;
+  aside?: ReactNode;
+  back?: LinkSpec;
+  stack?: boolean;
+}) {
+  const heading = (
+    <div className="k-pagehead__title">
+      <h1 className="k-d-lg">{title}</h1>
+      {sub ? <span className="k-pagehead__sub">{sub}</span> : null}
+    </div>
+  );
+  return (
+    <section className="k-pagehead">
+      <div className={cx("k-wrap k-pagehead__in", stack && "k-pagehead__in--stack")}>
+        {back ? (
+          <div className="k-stack" style={{ gap: 14 }}>
+            <BackLink {...back} />
+            {heading}
+          </div>
+        ) : (
+          heading
+        )}
+        {aside ? <div className="k-pagehead__aside">{aside}</div> : null}
+      </div>
+    </section>
+  );
+}
+

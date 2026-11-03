@@ -1,0 +1,167 @@
+import Link from "next/link";
+import { DayGuard } from "@/components/islands/DayGuard.client";
+import { RelTime } from "@/components/islands/RelTime.client";
+import { cx } from "@/lib/cx";
+import { dayKey, dayLabel, firstLetter, formatDayMonth, formatMatchDateShort, formatTime } from "@/lib/format";
+import { DEFAULT_LOCALE } from "@/lib/i18n";
+import { paths } from "@/lib/routes";
+import { hasScore, winner } from "@/lib/sport";
+import { gameKit } from "@/lib/teamPalette";
+import type { Game, Gym, Team } from "@/lib/types";
+import { JerseySvg } from "./Jersey";
+import { MiniMatch } from "./Matches";
+import { Vt, vtName } from "./Vt";
+
+/** Статус слева в строке: точка + «Идёт» / «Завершён» / «Отменён», у предстоящего — время. */
+function status(g: Game, time: string) {
+  switch (g.status) {
+    case "live":
+      return <span className="k-status k-status--live">Идёт</span>;
+    case "finished":
+      return <span className="k-status k-status--muted">Завершён</span>;
+    case "cancelled":
+      return <span className="k-status k-status--muted">Отменён</span>;
+    default:
+      return (
+        <span className="k-daycard__clock">
+          <b>{time}</b>
+          {/* до гидрации — «сегодня», после — «через 2 ч» */}
+          <RelTime at={g.scheduledAt} absolute="сегодня" />
+        </span>
+      );
+  }
+}
+
+/**
+ * Карточка матча дня (~118 px): сверху статус и зал; ниже две строки команд — майка 30×36 px
+ * в цвете формы (хозяева сверху — светлая, гости — тёмная, по FIBA), название 16 px, счёт
+ * Oswald 32 px справа (проигравший приглушён). Вся карточка — ссылка на матч.
+ */
+function DayCard({ game, teams, gym }: { game: Game; teams: Map<string, Team>; gym?: Gym }) {
+  const scored = hasScore(game);
+  const w = winner(game);
+  const time = formatTime(game.scheduledAt, DEFAULT_LOCALE);
+  const row = (side: "home" | "away") => {
+    const id = side === "home" ? game.homeTeamId : game.awayTeamId;
+    const name = side === "home" ? game.homeTeamName : game.awayTeamName;
+    const score = side === "home" ? game.homeScore : game.awayScore;
+    return (
+      <span className={cx("k-dayteam", w && w !== side && "is-loser", w === side && "is-winner")}>
+        {/* on="dark": тёмная форма на navy-soft получает белую обводку (контраст < 1.8) */}
+        <JerseySvg kit={gameKit(teams.get(id), side)} label={firstLetter(name)} className="k-dayteam__kit" on="dark" />
+        <span className="k-dayteam__name">
+          {name}
+          {/* роль — только на десктопе, очень мелко */}
+          <span className="k-dayteam__role">{side === "home" ? "хозяева" : "гости"}</span>
+        </span>
+        {scored ? <span className="k-dayteam__score">{score}</span> : null}
+      </span>
+    );
+  };
+  const label = `${game.homeTeamName} — ${game.awayTeamName}${scored ? `, ${game.homeScore}:${game.awayScore}` : `, ${time}`}`;
+  return (
+    <Vt name={vtName.game(game.id)}>
+      <Link className={cx("k-daycard", game.status === "cancelled" && "is-off")} href={paths.game(game.id)} aria-label={label}>
+        <span className="k-daycard__head">
+          {status(game, time)}
+          <span className="k-daycard__gym">{gym?.name ?? game.gymName}</span>
+        </span>
+        <span className="k-daycard__teams">
+          {row("home")}
+          {row("away")}
+        </span>
+      </Link>
+    </Vt>
+  );
+}
+
+/**
+ * Табло дня на главной: первый блок, если сегодня (по Бишкеку) есть матчи — в том числе
+ * только завершённые (итоги дня). Один матч — крупно; несколько — лента на мобилке, сетка
+ * на десктопе. Под табло — строка «Дальше» с ближайшими матчами других дней. Если страница из
+ * кэша, а день табло уже прошёл, на клиенте вся секция заменяется «Ближайшими матчами»
+ * (DayGuard, fallback со своим h1).
+ */
+export function MatchDay({
+  games,
+  next,
+  soon,
+  teams,
+  gyms,
+  now,
+}: {
+  games: Game[];
+  /** Ближайшие матчи не сегодня (до двух) — строка «Дальше». */
+  next: Game[];
+  /** Ближайшие матчи без отсечения «сегодня» (до двух) — фолбэк устаревшего табло. */
+  soon: Game[];
+  teams: Map<string, Team>;
+  gyms: Map<string, Gym>;
+  now: number;
+}) {
+  const first = games[0];
+  const day = first ? `${dayLabel(first.scheduledAt, now, DEFAULT_LOCALE)}, ${formatDayMonth(first.scheduledAt, DEFAULT_LOCALE)}` : "";
+  const minis = next.length ? (
+    <div className="k-matchday__minis">
+      {next.map((g) => (
+        <MiniMatch
+          key={g.id}
+          game={g}
+          teams={teams}
+          date={`${dayLabel(g.scheduledAt, now, DEFAULT_LOCALE)} · ${formatTime(g.scheduledAt, DEFAULT_LOCALE)}`}
+        />
+      ))}
+    </div>
+  ) : null;
+  const calendar = (
+    <Link className="k-link" style={{ marginLeft: "auto", color: "var(--orange)" }} href={paths.games()}>
+      Календарь →
+    </Link>
+  );
+  // День устарел (страница из кэша вчерашняя) — вся секция заменяется: свой h1 и ближайшие матчи
+  const fallback = (
+    <section className="k-matchday k-on-dark">
+      <div className="k-wrap k-stack" style={{ gap: 10 }}>
+        <div className="k-matchday__head">
+          <h1 className="k-matchday__title">Ближайшие матчи</h1>
+          {calendar}
+        </div>
+        {soon.length ? (
+          // Без «Сегодня/Завтра»: относительные подписи посчитаны вчерашним «сейчас»
+          <div className="k-matchday__minis">
+            {soon.map((g) => (
+              <MiniMatch key={g.id} game={g} date={formatMatchDateShort(g.scheduledAt, DEFAULT_LOCALE)} teams={teams} />
+            ))}
+          </div>
+        ) : (
+          <p className="k-empty">Расписание — в календаре</p>
+        )}
+      </div>
+    </section>
+  );
+  return (
+    <DayGuard day={dayKey(first?.scheduledAt ?? now)} fallback={fallback}>
+      <section className="k-matchday k-on-dark">
+        <div className="k-wrap k-stack" style={{ gap: 10 }}>
+          <div className="k-matchday__head">
+            <h1 className="k-matchday__title">Матчи · {day}</h1>
+            {calendar}
+          </div>
+          <div className={cx("k-matchday__list", games.length === 1 && "is-single")}>
+            {games.map((g) => (
+              <DayCard key={g.id} game={g} teams={teams} gym={gyms.get(g.gymId)} />
+            ))}
+          </div>
+          {minis ? (
+            <div className="k-matchday__next">
+              <h2 className="k-label" style={{ margin: 0, color: "var(--on-dark-3)" }}>
+                Дальше
+              </h2>
+              {minis}
+            </div>
+          ) : null}
+        </div>
+      </section>
+    </DayGuard>
+  );
+}

@@ -1,0 +1,98 @@
+/* Блоки под данные FIBA LiveStats (лидеры, статистика сезона, счёт по четвертям,
+   сравнение команд, лидеры турнира). Сейчас вместо них — FibaStub. Файл НЕ подключён:
+   подключить в app/globals.css рядом с kbf-a.css, когда появятся данные (правка: ревью А). */
+@layer components {
+  /* из kbf-a.css */ .k-stub { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border: 1px dashed var(--icon-quiet); border-radius: var(--radius-pill); font: 700 10px/1 var(--font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+  /* из kbf-a.css */ .k-stub::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--icon-quiet); }
+  /* из kbf-a.css */ .k-on-dark .k-stub { border-color: var(--navy-line-strong); color: var(--on-dark-3); }
+  /* из kbf-a.css */ .k-leaders { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+  /* из kbf-a.css */ .k-leader { display: flex; flex-direction: column; gap: 8px; padding: 12px 10px; }
+  /* из kbf-a.css */ .k-leader__val { font: 600 30px/1 var(--font-display); color: var(--ink); }
+  /* из kbf-a.css */ .k-leader__val small { font: 600 11px/1 var(--font-sans); color: var(--text-muted); margin-left: 3px; letter-spacing: 0; }
+  /* из kbf-a.css */ .k-leader__who { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--line-faint); min-width: 0; }
+  /* из kbf-a.css */ .k-leader__who .k-shirt { width: 26px; }
+  /* из kbf-a.css */ .k-leader__who b { font: 700 12px/1.2 var(--font-sans); color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-leaders { gap: var(--space-5); } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-leader { padding: 18px 20px; gap: 10px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-leader__val { font-size: 44px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-leader__who .k-shirt { width: 34px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-leader__who b { font-size: 14px; } }
+  /* из kbf-a.css */ .k-sstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+  /* из kbf-a.css */ .k-sstat { display: flex; flex-direction: column; gap: 6px; padding: 12px; }
+  /* из kbf-a.css */ .k-sstat b { font: 600 28px/1 var(--font-display); color: var(--ink); }
+  /* из kbf-a.css */ .k-sstat.is-accent { background: var(--navy); border-color: var(--navy); }
+  /* из kbf-a.css */ .k-sstat.is-accent b { color: var(--orange); }
+  /* из kbf-a.css */ .k-sstat.is-accent .k-eyebrow { color: var(--on-dark-3); }
+  /* из kbf-a.css */ .k-sstat.is-accent .k-caption { color: var(--on-dark-3); }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-sstats { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-sstat { padding: 16px 18px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-sstat b { font-size: 36px; } }
+  /* из kbf-a.css */ .k-quarters { width: 100%; max-width: 560px; margin: 18px auto 0; border-collapse: separate; border-spacing: 0; background: var(--navy-soft); border: 1px solid var(--navy-line); border-radius: var(--radius-sm); overflow: hidden; }
+  /* из kbf-a.css */ .k-quarters th { font: 700 10px/1 var(--font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--on-dark-3); padding: 9px 4px; text-align: center; border-bottom: 1px solid var(--navy-line); }
+  /* из kbf-a.css */ .k-quarters td { font: 600 16px/1 var(--font-display); color: var(--on-dark-2); padding: 9px 4px; text-align: center; font-variant-numeric: tabular-nums; }
+  /* из kbf-a.css */ .k-quarters tr + tr td { border-top: 1px solid var(--navy-line); }
+  /* из kbf-a.css */ .k-quarters th:first-child, .k-quarters td:first-child { text-align: left; padding-left: 12px; }
+  /* из kbf-a.css */ .k-quarters td:first-child { font: 700 13px/1 var(--font-sans); color: var(--on-dark); }
+  /* из kbf-a.css */ .k-quarters td:first-child .k-dot { margin-right: 8px; vertical-align: -1px; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .5); }
+  /* из kbf-a.css */ .k-quarters td.is-q { color: var(--on-dark); }
+  /* из kbf-a.css */ .k-quarters th:last-child, .k-quarters td:last-child { padding-right: 12px; background: rgba(255, 255, 255, .04); }
+  /* из kbf-a.css */ .k-quarters td:last-child { color: var(--on-dark); font-size: 18px; }
+  /* из kbf-a.css */ .k-quarters tr.is-win td:last-child { color: var(--orange); }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-quarters { margin-top: 28px; border-radius: var(--radius-md); } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-quarters td { font-size: 19px; padding: 12px 6px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-quarters th { padding: 11px 6px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-quarters td:last-child { font-size: 22px; } }
+  /* из kbf-a.css */ .k-fiba { overflow: hidden; }
+  /* из kbf-a.css */ .k-fiba__head { display: flex; align-items: center; gap: 12px; padding: 14px; border-bottom: 1px solid var(--line-faint); flex-wrap: wrap; }
+  /* из kbf-a.css */ .k-fiba__logo { flex: none; height: 32px; padding: 0 10px; border-radius: var(--radius-xs); background: var(--navy); color: var(--on-dark); display: flex; align-items: center; font: 600 13px/1 var(--font-display); letter-spacing: .08em; }
+  /* из kbf-a.css */ .k-fiba__logo i { font-style: normal; color: var(--orange); margin-left: 4px; }
+  /* из kbf-a.css */ .k-fiba__teams { display: grid; grid-template-columns: 1fr auto 1fr; padding: 12px 14px 0; font: 700 12px/1 var(--font-sans); color: var(--ink); }
+  /* из kbf-a.css */ .k-fiba__teams span:last-child { text-align: right; }
+  /* из kbf-a.css */ .k-fiba__teams .k-dot { vertical-align: -1px; margin: 0 6px; }
+  /* из kbf-a.css */ .k-cmp { padding: 6px 14px 14px; display: flex; flex-direction: column; gap: 12px; }
+  /* из kbf-a.css */ .k-cmp__row { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; grid-template-rows: auto auto; column-gap: 8px; row-gap: 5px; align-items: center; }
+  /* из kbf-a.css */ .k-cmp__label { grid-column: 1 / -1; text-align: center; font: 600 11px/1.2 var(--font-sans); color: var(--text-muted); }
+  /* из kbf-a.css */ .k-cmp__v { font: 600 16px/1 var(--font-display); color: var(--ink); font-variant-numeric: tabular-nums; }
+  /* из kbf-a.css */ .k-cmp__v:last-child { text-align: right; }
+  /* из kbf-a.css */ .k-cmp__v.is-lo { color: var(--text-muted); }
+  /* из kbf-a.css */ .k-cmp__bar { display: flex; gap: 3px; height: 8px; }
+  /* из kbf-a.css */ .k-cmp__bar span { border-radius: 2px; }
+  /* из kbf-a.css */ .k-cmp__bar span:first-child { background: var(--h); }
+  /* из kbf-a.css */ .k-cmp__bar span:last-child { background: var(--a); }
+  /* из kbf-a.css */ .k-fiba__foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 14px; border-top: 1px solid var(--line-faint); background: var(--surface-muted); }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-fiba__head, .k-fiba__foot { padding: 16px 22px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-fiba__teams { padding: 16px 22px 0; font-size: 13px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-cmp { padding: 8px 22px 20px; gap: 14px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-cmp__row { grid-template-columns: 44px minmax(0, 1fr) 44px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-cmp__v { font-size: 18px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-cmp__bar { height: 10px; } }
+  /* из kbf-a.css */ .k-lboard { display: grid; gap: var(--space-2); }
+  /* из kbf-a.css */ .k-lcat { overflow: hidden; }
+  /* из kbf-a.css */ .k-lcat__head { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 14px; border-bottom: 1px solid var(--line-faint); }
+  /* из kbf-a.css */ .k-lcat__head b { font: 600 16px/1 var(--font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--ink); }
+  /* из kbf-a.css */ .k-lrow { display: flex; align-items: center; gap: 10px; padding: 9px 14px; }
+  /* из kbf-a.css */ .k-lrow + .k-lrow { border-top: 1px solid var(--line-faint); }
+  /* из kbf-a.css */ .k-lrow .k-num { width: 14px; color: var(--text-muted); font-size: 14px; }
+  /* из kbf-a.css */ .k-lrow .k-shirt { width: 30px; }
+  /* из kbf-a.css */ .k-lrow__who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  /* из kbf-a.css */ .k-lrow__who b { font: 700 13px/1.2 var(--font-sans); color: var(--ink); }
+  /* из kbf-a.css */ .k-lrow__val { margin-left: auto; font: 600 20px/1 var(--font-display); color: var(--ink); font-variant-numeric: tabular-nums; }
+  /* из kbf-a.css */ .k-lrow:first-of-type .k-lrow__val { color: var(--orange-ink); }
+  /* из kbf-a.css */ .k-lrow:first-of-type .k-num { color: var(--orange-ink); }
+  /* из kbf-a.css */ .k-lrow:first-of-type { background: var(--orange-wash); }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-lboard { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-5); } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-lcat__head { padding: 14px 18px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-lrow { padding: 11px 18px; } }
+  /* из kbf-a.css */ .k-sechead .k-stub { align-self: center; }
+  /* из kbf-a.css */ .k-sstat b { white-space: nowrap; }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-sstat { padding: 14px; } }
+  /* из kbf-a.css */ @container page (min-width: 1024px) { .k-sstat b { font-size: 28px; } }
+  /* из kbf-a.css */ @container page (max-width: 1023px) { .k-leaders { grid-template-columns: 1fr; } }
+  /* из kbf-a.css */ @container page (max-width: 1023px) { .k-leader { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "cat val" "who val"; align-items: center; gap: 6px 12px; padding: 10px 14px; } }
+  /* из kbf-a.css */ @container page (max-width: 1023px) { .k-leader .k-eyebrow { grid-area: cat; } }
+  /* из kbf-a.css */ @container page (max-width: 1023px) { .k-leader__val { grid-area: val; text-align: right; } }
+  /* из kbf-a.css */ @container page (max-width: 1023px) { .k-leader__who { grid-area: who; margin: 0; padding: 0; border: 0; } }
+  /* из kbf-a.css */ @container page (max-width: 1023px) { .k-lboard { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 calc(-1 * var(--gutter)); padding: 0 var(--gutter) 4px; scroll-padding-inline: var(--gutter); } }
+  /* из kbf-a.css */ @container page (max-width: 1023px) { .k-lboard::-webkit-scrollbar { display: none; } }
+  /* из kbf-a.css */ @container page (max-width: 1023px) { .k-lboard > * { flex: none; width: min(290px, 82%); scroll-snap-align: start; } }
+}

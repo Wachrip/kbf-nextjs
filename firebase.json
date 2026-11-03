@@ -1,0 +1,9 @@
+{
+  "apphosting": [
+    {
+      "backendId": "kbf-web",
+      "rootDir": ".",
+      "ignore": ["node_modules", ".git", ".next", "scripts", ".env*.local", "firebase-debug*.log"]
+    }
+  ]
+}

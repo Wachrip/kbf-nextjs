@@ -1,0 +1,70 @@
+rules_version = '2';
+
+// ЧЕРНОВИК правил Firestore для запуска сайта КБФ. НЕ ДЕПЛОИТЬ из этого репозитория:
+// правила проекта kbf-site живут рядом с админкой (kbf/), сейчас открыты на время разработки
+// (решено 2 ноября). Перед запуском перенести туда и выкатить вместе с админкой.
+//
+// Сайт читает Firestore REST без входа — как гость. Админка пишет под Firebase Auth.
+// Правила — не фильтр: запросы сайта к posts обязаны содержать where isPublished == true
+// (так и сделано в src/data/firestoreSource.ts).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Новости: гостю — только опубликованные; админке — все.
+    match /posts/{id} {
+      allow read: if resource.data.isPublished == true || signedIn();
+      allow write: if signedIn();
+    }
+
+    match /players/{id} {
+      allow read: if true;
+      allow write: if signedIn();
+    }
+
+    match /teams/{id} {
+      allow read: if true;
+      allow write: if signedIn();
+    }
+
+    match /coaches/{id} {
+      allow read: if true;
+      allow write: if signedIn();
+    }
+
+    match /gyms/{id} {
+      allow read: if true;
+      allow write: if signedIn();
+    }
+
+    match /games/{id} {
+      allow read: if true;
+      allow write: if signedIn();
+    }
+
+    match /tournaments/{id} {
+      allow read: if true;
+      allow write: if signedIn();
+    }
+
+    // Составы по сезонам (memberships): публичное чтение, запись — только админка.
+    match /memberships/{id} {
+      allow read: if true;
+      allow write: if signedIn();
+    }
+
+    // settings/about, settings/season и прочие настройки сайта.
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if signedIn();
+    }
+
+    // Всё остальное закрыто.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

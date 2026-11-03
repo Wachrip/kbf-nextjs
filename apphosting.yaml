@@ -1,0 +1,28 @@
+# Firebase App Hosting: ресурсы и переменные окружения для сборки и сервера.
+# .env.local в облако не уходит — всё нужное здесь. Секретов у сайта нет: Firestore читается
+# REST без ключа, как гость (правила — firestore.rules.draft).
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+  cpu: 1
+  # Кэш «use cache», перегенерированные страницы и нарезки фото живут в памяти инстанса
+  memoryMiB: 1024
+
+env:
+  - variable: KBF_DATA
+    value: firestore
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: kbf-site
+  # Адрес сайта для canonical, sitemap и Open Graph. Шаблон App Hosting:
+  # https://<backend>--<проект>.<регион>.hosted.app. Значение ниже — для бэкенда с ID
+  # «kbf-web» в регионе asia-southeast1. Регион может быть недоступен для App Hosting
+  # (по блогу Firebase, октябрь 2024: us-central1, asia-east1, europe-west4): при создании
+  # бэкенда выбрать asia-southeast1, если он есть в списке, иначе asia-east1 — и заменить
+  # адрес ниже на фактический адрес бэкенда из консоли (README, «Деплой»).
+  # TODO: если бэкенд создан с другим ID/регионом — поправить; после покупки домена — домен.
+  # Демо: сайт закрыт от поисковиков (robots.txt, meta robots, X-Robots-Tag).
+  # Снять при запуске на домене.
+  - variable: SITE_NOINDEX
+    value: "1"
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://kbf-web--kbf-site.asia-southeast1.hosted.app

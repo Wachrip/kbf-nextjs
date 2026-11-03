@@ -1,0 +1,384 @@
+/* Дополнения к kbf.css для продакшена: реальные фото вместо плейсхолдеров, поля ввода,
+   островки (меню, галереи), состояния, которых не было в книге, и исправления макета.
+   Каждое исправление помечено «правка:» — список в README. */
+@layer components {
+  /* Каркас: подвал прижат к низу короткой страницы */
+  .k-page { min-height: 100dvh; display: flex; flex-direction: column; }
+  .k-main { flex: 1 0 auto; }
+
+  /* Фото next/image (fill) внутри медиа */
+  .k-media { position: relative; }
+  .k-media > img { position: absolute; inset: 0; }
+  .k-media--logo > img { box-sizing: border-box; }
+  .k-media.is-dark { background: var(--navy-line); border-color: var(--navy-line); }
+  .k-media.is-dark .k-initials { background: var(--navy-line); color: var(--on-dark-3); }
+  .k-initials--lg { font-size: clamp(28px, 3cqi, 40px); }
+
+  /* правка: логотип команды в плитке (TeamList) — в макете на десктопе прилипал к углу
+     карточки (у .k-flip padding 0, а логотип не .k-flip__media). Отступ и размер 64px по ТЗ. */
+
+  /* правка: состояние наведения карточки-ссылки из README («рамка ink, стрелка orange-ink»)
+     в bundle.css не было */
+  @media (hover: hover) {
+    a.k-card:not(.k-card--dark):hover { border-color: var(--ink); }
+    a.k-card:not(.k-card--dark):hover .k-arrow { color: var(--orange-ink); }
+    a.k-card--dark:hover { border-color: var(--orange); }
+    .k-chip:hover { border-color: var(--on-dark-3); }
+    .k-chips--light .k-chip:hover { border-color: var(--ink); }
+    .k-pager a:hover { border-color: var(--ink); }
+    .k-footer__col a:hover { color: var(--on-dark); }
+  }
+
+  /* Чипы-кнопки в островке (амплуа): то же, что активная ссылка-чип */
+  button.k-chip { background: transparent; cursor: pointer; }
+  .k-chip[aria-pressed="true"] { background: var(--on-dark); color: var(--navy); border-color: var(--on-dark); font-weight: 700; }
+  .k-chips--light .k-chip[aria-pressed="true"] { background: var(--navy); color: var(--on-dark); border-color: var(--navy); }
+
+  /* Поля: настоящие input/select внутри .k-field */
+
+  /* Пустое состояние */
+  .k-empty { padding: 28px 16px; text-align: center; font: 500 14px/1.5 var(--font-sans); color: var(--text-muted); }
+  .k-on-dark .k-empty, .k-card--dark .k-empty { color: var(--on-dark-3); }
+
+  /* Скрыто визуально, доступно читалкам */
+  .k-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  /* Мобильное меню (бургер) */
+  .k-menu { position: fixed; inset: 0; z-index: 50; background: var(--navy); color: var(--on-dark); display: flex; flex-direction: column; overflow-y: auto; }
+  .k-menu__top { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; padding-bottom: 14px; }
+  .k-menu__close { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: none; border: 0; color: var(--on-dark); font: 400 30px/1 var(--font-sans); cursor: pointer; }
+  .k-menu__list { display: flex; flex-direction: column; padding-top: 8px; padding-bottom: 32px; }
+  .k-menu__list a { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--navy-line); font: 700 20px/1.3 var(--font-sans); color: var(--on-dark-2); }
+  .k-menu__list a[aria-current="page"] { color: var(--on-dark); }
+  .k-menu__list a[aria-current="page"]::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--orange); }
+  .k-menu__foot { margin-top: auto; padding-bottom: 28px; display: flex; flex-direction: column; gap: 12px; }
+  @media (min-width: 1024px) { .k-menu { display: none; } }
+  .k-menu .k-logo { height: 32px; }
+
+  /* Галерея площадки: лента со scroll-snap под затемнением */
+  .k-gallery { position: absolute; inset: 0; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .k-gallery::-webkit-scrollbar { display: none; }
+  .k-gallery__slide { position: relative; flex: 0 0 100%; scroll-snap-align: start; }
+  .k-gallery__slide > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .k-photo .k-photo__veil { pointer-events: none; }
+  .k-photo .k-photo__veil a, .k-photo .k-photo__veil button { pointer-events: auto; }
+  .k-photo__top { z-index: 2; align-items: center; }
+  .k-gallery__nav { display: none; }
+  @container page (min-width: 1024px) {
+    .k-gallery__nav { display: flex; position: absolute; top: 50%; z-index: 2; width: 44px; height: 44px; margin-top: -22px; align-items: center; justify-content: center; border-radius: 50%; background: rgba(11, 15, 30, .55); border: 1px solid var(--navy-line-strong); color: var(--on-dark); font: 700 18px/1 var(--font-sans); cursor: pointer; backdrop-filter: blur(4px); }
+    .k-gallery__nav--prev { left: max(var(--gutter-l), calc((100% - var(--container)) / 2)); }
+    .k-gallery__nav--next { right: max(var(--gutter-r), calc((100% - var(--container)) / 2)); }
+  }
+  /* Миниатюры всех фото: до 5 — делят ширину, больше — лента с прокруткой */
+
+  /* Галерея новости: лента на мобилке, сетка 3 колонки на десктопе; просмотр на весь экран */
+
+  .k-lightbox { position: fixed; inset: 0; z-index: 60; background: rgba(11, 15, 30, .96); display: flex; flex-direction: column; color: var(--on-dark); }
+  .k-lightbox__bar { display: flex; justify-content: space-between; align-items: center; padding: 12px var(--gutter-r) 12px var(--gutter-l); font: 600 13px/1 var(--font-sans); color: var(--on-dark-2); }
+  .k-lightbox__stage { position: relative; flex: 1; margin: 0 var(--gutter-r) var(--gutter) var(--gutter-l); }
+  .k-lightbox__stage > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .k-lightbox__btn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--navy-soft); border: 1px solid var(--navy-line); color: var(--on-dark); font: 700 18px/1 var(--font-sans); cursor: pointer; }
+  .k-lightbox__nav { position: absolute; top: 50%; margin-top: -22px; z-index: 1; }
+  .k-lightbox__nav--prev { left: 8px; }
+  .k-lightbox__nav--next { right: 8px; }
+
+  /* PDF-протокол матча: встроенный просмотр только на десктопе */
+  .k-pdf { display: block; width: 100%; height: 520px; border: 0; background: var(--surface-muted); }
+
+  /* правка: результаты тура в карточке — у первой строки двойная граница с рамкой карточки */
+  .k-resultlist > .k-row { justify-content: space-between; border-top: 1px solid var(--line-faint); }
+  .k-resultlist > .k-row:first-child { border-top: 0; }
+
+  /* правка: в составе первая колонка — фото 44px, а у .k-table первая колонка 34px (под #) */
+
+  .k-table a.k-table__team:hover .k-table__name { text-decoration: underline; text-underline-offset: 3px; }
+  .k-table tr.is-link { cursor: pointer; }
+
+  /* Статья: колонка текста 760px + «Читайте также» */
+
+  .k-prose ul, .k-prose ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; font: 400 clamp(16px, 1.25cqi, 18px)/1.7 var(--font-sans); color: var(--text); }
+  .k-prose ul { list-style: disc; }
+  .k-prose ol { list-style: decimal; }
+  .k-prose a { color: var(--orange-ink); text-decoration: underline; text-underline-offset: 3px; }
+  .k-prose strong { color: var(--ink); font-weight: 700; }
+  .k-prose h3 { font: 700 clamp(17px, 1.4cqi, 20px)/1.35 var(--font-sans); color: var(--ink); margin: 4px 0 0; }
+
+  /* Шапка игрока/тренера на десктопе: портрет слева */
+
+  .k-portrait { position: relative; height: 440px; border-radius: var(--radius-lg); overflow: hidden; background: var(--navy-soft); }
+
+  .k-portrait > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .k-portrait .k-initials { background: var(--navy-soft); color: var(--on-dark-4); }
+
+  /* Тёмная шапка «без фото» на мобилке (игрок, тренер): инициалы 96px */
+
+}
+
+@layer components {
+  /* Карточка с несколькими ссылками (плитка площадки: карточка → страница зала, «2ГИС →» —
+     отдельная ссылка). Вложенные <a> недопустимы — заголовок растягивается на всю карточку. */
+  .k-card.has-stretch { position: relative; }
+  .k-stretch::after { content: ""; position: absolute; inset: 0; z-index: 0; border-radius: inherit; }
+  .k-stretch:focus-visible { outline: none; }
+  .k-stretch:focus-visible::after { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .k-above { position: relative; z-index: 1; }
+  @media (hover: hover) { .k-card.has-stretch:hover { border-color: var(--ink); } }
+
+  /* «Показать туры 1–5» без JS: <details> со summary-кнопкой */
+  .k-more > summary { list-style: none; display: flex; justify-content: center; padding-top: 20px; }
+  .k-more > summary::-webkit-details-marker { display: none; }
+  .k-more[open] > summary { display: none; }
+  .k-more__btn { min-width: 260px; }
+}
+
+@layer components {
+  /* Календарь: выделенный тур 1.4fr + 1fr (в макете — inline-стиль на .k-split) */
+  @container page (min-width: 1024px) {
+
+    .k-split--t380 { grid-template-columns: minmax(0, 1fr) 380px; }
+  }
+}
+
+@layer components {
+  /* правка контраста: в макете турнира «ИДЁТ» (k-status) стоял в тёмной шапке без .k-on-dark
+     и получал orange-ink на navy (≈3:1). Внутри тёмных зон — те же цвета, что у .k-on-dark. */
+  .k-pagehead .k-status, .k-photo .k-status { color: var(--orange); }
+  .k-pagehead .k-status--muted, .k-photo .k-status--muted { color: var(--on-dark-3); }
+  .k-pagehead .k-status--muted::before { background: var(--on-dark-4); }
+  .k-pagehead .k-eyebrow, .k-photo .k-eyebrow { color: var(--on-dark-3); }
+  .k-pagehead .k-meta, .k-photo .k-meta { color: var(--on-dark-2); }
+  .k-pagehead .k-link, .k-photo .k-link { color: var(--orange); }
+}
+
+@layer components {
+  /* <picture> из Img(only): не участвует в раскладке, img позиционируется как прямой потомок */
+  .k-pic { display: contents; }
+  .k-photo > .k-pic > img, .k-portrait > .k-pic > img, .k-media > .k-pic > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+  /* Статичные фото малого разрешения (kids-training 612px): на широком экране фото занимает
+     правую часть до 720px и растворяется в navy-deep слева, а не растягивается до мыла.
+     TODO: нужны исходники крупнее (README). */
+  @container page (min-width: 768px) {
+    .k-photo.is-lowres > img, .k-photo.is-lowres > .k-pic > img { left: auto; width: min(100%, 720px); -webkit-mask-image: linear-gradient(90deg, transparent, #000 35%); mask-image: linear-gradient(90deg, transparent, #000 35%); }
+  }
+}
+
+@layer components {
+  /* Скрытые атрибутом hidden карточки (сверх «Показать ещё») — поверх display у .k-flip */
+  .k-page [hidden] { display: none !important; }
+}
+
+@layer components {
+  /* правка: фильтр «Регион» (команды дивизиона, площадки, турниры) — светлые чипы над
+     списком, как амплуа на «Игроках»; в книге фильтра регионов не было */
+
+  /* правка: номера в составе (memberships). Мобилка — номер Oswald слева от фото в строке;
+     десктоп — первая колонка «#» 34/52px (как задумано у .k-table), фото — второй */
+
+  .k-table abbr[title] { text-decoration: none; cursor: help; }
+
+  /* правка: «Карьера» игрока — таблица k-table: сезон «2026–27» не помещался в узкую первую
+     колонку (34px под «#»), период справа не переносится; активная запись — .is-lead */
+
+  /* подпись под названием в ячейке (дивизион в «Карьере») — на всех ширинах, в отличие от
+     .k-table__diff, который на десктопе скрыт */
+
+  /* правка: игровой номер в шапке игрока (главная активная запись) — Oswald orange рядом с
+     бейджами амплуа; в книге номера не было (не было и модели) */
+
+}
+
+@layer components {
+  /* правка: индикатор перехода (в книге не было). Полоска 3px orange над всем, вне .k-page;
+     растёт до 85% за несколько секунд, по готовности добегает и гаснет. Появляется через
+     150 мс (NavProgress.client.tsx), при reduced-motion — без анимации, сразу целиком. */
+  .k-navprogress { position: fixed; top: 0; left: 0; right: 0; z-index: 70; height: 3px; background: var(--orange); transform-origin: 0 50%; transform: scaleX(0); opacity: 0; pointer-events: none; }
+  .k-navprogress[data-state="loading"] { opacity: 1; transform: scaleX(.85); transition: transform 8s cubic-bezier(.08, .6, .2, 1), opacity .1s linear; }
+  .k-navprogress[data-state="done"] { opacity: 0; transform: scaleX(1); transition: transform .2s ease-out, opacity .2s linear .2s; }
+  @media (prefers-reduced-motion: reduce) {
+    .k-navprogress[data-state="loading"] { transform: scaleX(1); transition: none; }
+    .k-navprogress[data-state="done"] { transition: none; }
+  }
+
+  /* правка: нажатая ссылка-чип и номер страницы, пока идёт переход (useLinkStatus) */
+  .k-pending { display: contents; }
+  .k-chip:has(> [aria-busy="true"]), .k-pager a:has(> [aria-busy="true"]) { opacity: .55; cursor: progress; }
+  @media (prefers-reduced-motion: no-preference) {
+    .k-chip, .k-pager a { transition: opacity .15s linear; }
+  }
+
+  /* правка: скелеты (Suspense-оболочки списков). Серые блоки на светлом, в тёмной шапке —
+     navy-line; размеры как у настоящих карточек, чтобы не было прыжков */
+  .k-skel { display: block; border-radius: var(--radius-sm); background: var(--surface-muted); }
+  .k-pagehead .k-skel { background: var(--navy-line); }
+  .k-skel--line { height: 14px; width: 60%; }
+  .k-skel--sub { height: 14px; width: 180px; margin-top: 4px; }
+  .k-skel--field { height: 46px; border-radius: var(--radius-md); }
+  .k-skel--card { height: 84px; border-radius: var(--radius-md); }
+  .k-skel--round { height: 96px; border-radius: var(--radius-md); }
+  @container page (min-width: 1024px) {
+
+    .k-skel--round { height: 120px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .k-skel { animation: k-skel-pulse 1.4s ease-in-out infinite; }
+  }
+  @keyframes k-skel-pulse { 50% { opacity: .55; } }
+}
+
+@layer components {
+  /* ── Цвета команд (правка: в книге их не было). Цвет — акцент, не заливка: шапка команды,
+     тонкая полоса у карточек, точка у матчей, бейдж номера. Переменные на корне блока
+     (lib/teamPalette.ts, teamVars): --team, --team-ink, --team-head, --kit-light, --kit-dark,
+     --kit-light-num, --kit-dark-num. Без переменных — navy/cream DS. */
+
+  /* правка: шапка команды — градиент от основного цвета к navy-deep вместо navy; текст —
+     белый (контраст ≥ 4.5:1 проверен в teamColors, иначе --team-head = navy) */
+
+  /* правка ревью: orange на цвете команды — 1.3–2.9:1. Внутри шапки акценты белые/cream:
+     статус, ссылки, лидерская плитка; плитки на плотной подложке (navy-deep 60% — белый
+     текст ≥ 12.7:1 на всех цветах палитры, scripts: kbfrun2/contrast.ts) */
+
+  /* правка: полоса цвета команды — слева у строки-карточки, сверху у плитки команды */
+  .k-row--team { box-shadow: inset 3px 0 0 var(--team, var(--navy)); }
+
+  /* правка: точка цвета команды перед названием в карточках матчей */
+  .k-teamdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: .1em; box-shadow: 0 0 0 1px rgba(255, 255, 255, .5); }
+  .k-on-dark .k-teamdot { box-shadow: 0 0 0 1px rgba(255, 255, 255, .35); }
+
+  /* правка: номер в составе — бейдж в цвете тёмной формы (номер белый/по контрасту) */
+  /* мелкий текст: --kit-dark-small (≥ 4.5:1, отдельный расчёт в teamColors) */
+
+  /* ── Майка (ui/Jersey.tsx): силуэт inline SVG на мягком фоне, размеры — как у k-media */
+  .k-media--kit { background: var(--surface-sunken); }
+  .k-media--kit > .k-kit { width: 74%; height: 74%; }
+  .k-media--kit-dark, .k-media.is-dark.k-media--kit { background: var(--navy-soft); }
+
+  .k-kit { display: block; overflow: visible; }
+
+  /* ── Форма В/П (ui/Form.tsx): кружки 18px, В — orange-ink с белой буквой (5.2:1), П — серый */
+  .k-form { display: inline-flex; gap: 3px; vertical-align: middle; }
+  .k-form__dot { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; font: 700 9px/1 var(--font-sans); }
+  .k-form__dot.is-w { background: var(--orange-ink); color: #fff; }
+  /* П: ink на surface-sunken — 13.2:1 (text-muted давал 4.0:1) */
+  .k-form__dot.is-l { background: var(--surface-sunken); color: var(--ink); }
+  /* На шапке команды: В — белый круг с буквой цвета шапки, П — белый контур (контраст = белый
+     на цвете шапки, ≥ 5.2:1 на всей палитре) */
+  .k-form--dark .k-form__dot.is-w { background: #fff; color: var(--team-head, var(--navy)); }
+  .k-form--dark .k-form__dot.is-l { background: transparent; color: #fff; box-shadow: inset 0 0 0 1.5px #fff; }
+  .k-form__dot.is-old { display: none; }
+  @container page (min-width: 1024px) { .k-form__dot.is-old { display: inline-flex; } .k-form__dot { width: 20px; height: 20px; font-size: 10px; } }
+
+  /* ── Табло дня (ui/MatchDay.tsx): компактные карточки ~118px с крупными майками в цветах
+     формы. Мобилка — вертикальный список (3 карточки на первом экране 390×844), десктоп —
+     сетка 2–3 в ряд; один матч — до 640px. Хозяева сверху (FIBA). */
+
+  /* высота: 2×9 padding + 13 шапка + 8 + 2×36 майки + 6 + 2 рамка = 119px */
+
+  /* время белым: orange на navy-soft — 3.99:1 */
+
+  /* проигравший приглушён, но ≥ 4.5:1 (on-dark-3 на navy-soft — 5.05) */
+
+  /* «Дальше»: строка ссылок-мини под табло */
+
+  /* «Идёт» — пульсирующая точка; при reduced-motion — статичная */
+
+  @keyframes k-live { 0% { box-shadow: 0 0 0 0 rgba(210, 96, 31, .6); } 100% { box-shadow: 0 0 0 8px rgba(210, 96, 31, 0); } }
+
+  /* ── Нижняя панель (islands/TabBar.client.tsx): мобилка, вне .k-page, safe-area */
+  .k-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--navy); border-top: 1px solid var(--navy-line); padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  .k-tabbar__item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 56px; font: 600 11px/1 var(--font-sans); color: var(--on-dark-3); }
+  .k-tabbar__item[aria-current] { color: var(--on-dark); }
+  .k-tabbar__item[aria-current] svg { color: var(--orange); }
+  .k-tabbar__item:focus-visible { outline: 2px solid var(--focus); outline-offset: -4px; }
+  @media (max-width: 1023.98px) { .k-page { padding-bottom: calc(57px + env(safe-area-inset-bottom)); } }
+  @media (min-width: 1024px) { .k-tabbar { display: none; } }
+  /* Мобильное меню (бургер) поверх панели */
+  .k-menu { z-index: 50; }
+
+  /* правка: галерея новости — кадры разных пропорций. В сетке 4:3 с кадрированием по
+     верхней трети (вертикальные фото — лица не срезаются), в просмотре — целиком (contain) */
+
+  .k-lightbox__stage > img { object-fit: contain; }
+}
+
+/* ── View Transitions (за флагом NEXT_PUBLIC_VIEW_TRANSITIONS): только общие элементы
+   (карточка матча → табло матча, плитка команды → шапка), без crossfade страниц.
+   reduced-motion — без анимации */
+/* Корневой снимок страницы не анимируется — только k-fade и общие элементы */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+/* Crossfade навигации (PageShell, enter/exit="k-fade") */
+::view-transition-old(.k-fade) { animation: .14s ease-in both k-fade-out; }
+::view-transition-new(.k-fade) { animation: .2s ease-out .06s both k-fade-in; }
+@keyframes k-fade-out { to { opacity: 0; } }
+@keyframes k-fade-in { from { opacity: 0; } }
+::view-transition-group(*) { animation-duration: .28s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
+@layer components {
+  /* правка ревью: viewport-fit=cover — содержимое не уходит под вырез и скругления экрана.
+     Боковые поля контейнера — не меньше safe-area; шапка — сверху; меню и просмотр фото —
+     со всех сторон (нижняя панель — в своём правиле). */
+  /* Поля с учётом выреза: --gutter-l/--gutter-r — для полей и выноса за поля (ленты, галереи) */
+  :root { --gutter-l: max(var(--gutter), env(safe-area-inset-left)); --gutter-r: max(var(--gutter), env(safe-area-inset-right)); }
+  .k-wrap { padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+  /* Фото-шапки: «назад» и подпись поверх фото — не под вырезом */
+  /* (карточки-фото внутри .k-wrap — без изменений) */
+  .k-photo:not(.k-photo--card) .k-photo__top { left: var(--gutter-l); right: var(--gutter-r); }
+  .k-photo:not(.k-photo--card) > .k-photo__veil { padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+  @container page (min-width: 1024px) {
+    .k-photo:not(.k-photo--card) .k-photo__top { left: max(var(--gutter-l), calc((100% - var(--container)) / 2)); right: max(var(--gutter-r), calc((100% - var(--container)) / 2)); }
+    .k-photo:not(.k-photo--card) > .k-photo__veil { padding-left: max(var(--gutter-l), calc((100% - var(--container)) / 2)); padding-right: max(var(--gutter-r), calc((100% - var(--container)) / 2)); }
+  }
+  .k-header { padding-top: env(safe-area-inset-top); }
+  /* только верх и низ: бока — у детей через --gutter-l/r (иначе в ландшафте отступ двойной) */
+  .k-menu, .k-lightbox { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  .k-navprogress { top: env(safe-area-inset-top); }
+
+  /* Табло: «Дальше» — компактная строка ближайших матчей под карточками */
+
+}
+
+@layer components {
+  /* правка ревью: мелкий текст на тёмных фонах. text-muted на navy — 3.3:1, на navy-soft —
+     2.9:1; on-dark-3 — 5.8 / 5.05 (kbfrun2/darkmeta.ts). На navy-line (3.9:1) мелкого
+     текста нет, инициалы на нём — on-dark-2 (6.45). */
+  .k-on-dark .k-meta { color: var(--on-dark-3); }
+  .k-media.is-dark .k-initials { color: var(--on-dark-2); }
+  /* «Идёт» на карточке табло (navy-soft): orange 11px — 3.99:1, текст белый, точка orange */
+
+  /* Skip-link: виден только с клавиатуры */
+  .k-skip { position: absolute; left: 8px; top: -100px; z-index: 80; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--orange-ink); color: #fff; font: 700 14px/1 var(--font-sans); }
+  .k-skip:focus { top: max(8px, env(safe-area-inset-top)); outline: 2px solid #fff; outline-offset: 2px; }
+  .k-main:focus { outline: none; }
+}
+
+@layer components {
+  /* Скелет строки состава (fallback страницы команды): высота как у строки-карточки 52px+padding */
+  .k-skel--row { height: 76px; border-radius: var(--radius-md); }
+  @container page (min-width: 1024px) { .k-skel--row { height: 72px; border-radius: 0; } .k-skel--row + .k-skel--row { margin-top: -12px; } }
+}
+
+@layer components {
+  /* правка: логотип — знак (мяч из logo-white.png, без текста) + подпись HTML-текстом.
+     Мобилка: знак 38px, «КБФ» и полное название в две строки 10px; десктоп: знак 44px,
+     «КБФ» Oswald 20px, название 11px on-dark-2. Ширина — не больше 60% шапки. */
+  .k-logo.k-brand { height: auto; display: inline-flex; align-items: center; gap: 9px; max-width: 60%; color: var(--on-dark); }
+  .k-header .k-brand, .k-menu .k-brand { max-width: 60cqi; }
+  .k-brand__mark { width: 38px; height: 38px; flex: none; display: block; }
+  .k-logo.k-brand img { width: 38px; height: 38px; }
+  .k-brand__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .k-brand__short { font: 600 17px/1 var(--font-display); letter-spacing: .06em; color: var(--on-dark); }
+  .k-brand__full { font: 600 10px/1.2 var(--font-sans); color: var(--on-dark-2); }
+  @container page (min-width: 1024px) {
+    .k-logo.k-brand { gap: 11px; }
+    .k-brand__mark, .k-logo.k-brand img { width: 44px; height: 44px; }
+    .k-brand__short { font-size: 20px; }
+    .k-brand__full { font-size: 11px; }
+  }
+  .k-menu .k-logo.k-brand { height: auto; }
+  .k-footer__brand .k-brand { max-width: 100%; margin-bottom: 4px; }
+}
+

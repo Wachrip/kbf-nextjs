@@ -1,0 +1,281 @@
+import Link from "next/link";
+import { cx } from "@/lib/cx";
+import { dayLabel, firstLetter, formatDayMonth, formatMatchDate, formatTime } from "@/lib/format";
+import { DEFAULT_LOCALE } from "@/lib/i18n";
+import { gameStatusLabel } from "@/lib/labels";
+import { paths } from "@/lib/routes";
+import { hasScore, isOverdue, winner } from "@/lib/sport";
+import { gameKit } from "@/lib/teamPalette";
+import type { Game, Team } from "@/lib/types";
+import { JerseySvg } from "./Jersey";
+import { TeamLogo } from "./Media";
+import { TeamDot } from "./TeamDot";
+import { Vt, vtName } from "./Vt";
+
+export type TeamIndex = Map<string, Team>;
+
+const pair = (g: Game) => `${g.homeTeamName} — ${g.awayTeamName}`;
+
+/**
+ * Подпись даты строки матча с учётом статуса. С now — понятная дата («Сегодня · 19:00»,
+ * «Сб, 7 ноября · 18:00»), без него — как раньше.
+ */
+function matchEyebrow(g: Game, weekday: boolean, now?: number): string {
+  const day = now != null ? dayLabel(g.scheduledAt, now, DEFAULT_LOCALE) : formatDayMonth(g.scheduledAt, DEFAULT_LOCALE);
+  if (g.status === "cancelled") return `${day} · отменён`;
+  if (g.status === "live") return `${day} · идёт`;
+  if (g.status === "finished") return `${day} · завершён`;
+  // Запланирован, но давно прошёл — админка не внесла счёт
+  if (now != null && isOverdue(g, now)) return `${day} · результат не внесён`;
+  if (now != null) return `${day} · ${formatTime(g.scheduledAt, DEFAULT_LOCALE)}`;
+  return formatMatchDate(g.scheduledAt, DEFAULT_LOCALE, { weekday });
+}
+
+/**
+ * Матч одной строкой: дата · время, «Команда — Команда», подпись (зал или турнир).
+ * Сыгранный — счёт справа. accent — ближайший (дата orange-ink), dark — «Следующий матч».
+ */
+export function MatchRow({
+  game,
+  meta,
+  accent = false,
+  dark = false,
+  weekday = false,
+  now,
+  teams,
+  vt = true,
+}: {
+  game: Game;
+  /** Справочник команд — точки цвета у названий. */
+  teams?: TeamIndex;
+  /** Общий элемент View Transitions; false — если тот же матч уже есть на странице с vt. */
+  vt?: boolean;
+  meta?: string;
+  accent?: boolean;
+  dark?: boolean;
+  weekday?: boolean;
+  /** «Сейчас» из getNow() — подпись «Сегодня», «Завтра»… */
+  now?: number;
+}) {
+  const scored = hasScore(game);
+  const muted = game.status === "cancelled";
+  const row = (
+    <Link
+      className={cx("k-card", dark && "k-card--dark", muted && "k-card--muted", "k-row")}
+      href={paths.game(game.id)}
+    >
+      <span className="k-row__body">
+        <span
+          className={cx("k-eyebrow", (accent || dark) && "k-eyebrow--accent")}
+          style={dark ? { color: "var(--orange)" } : undefined}
+        >
+          {matchEyebrow(game, weekday, now)}
+        </span>
+        <span className="k-row__title">
+          <TeamDot team={teams?.get(game.homeTeamId)} />
+          {game.homeTeamName} — <TeamDot team={teams?.get(game.awayTeamId)} />
+          {game.awayTeamName}
+        </span>
+        {meta ? <span className="k-meta">{meta}</span> : null}
+      </span>
+      {scored ? (
+        <span className="k-num" style={{ marginLeft: "auto", color: dark ? "var(--on-dark)" : "var(--ink)" }}>
+          {game.homeScore} : {game.awayScore}
+        </span>
+      ) : null}
+      <span className="k-arrow" aria-hidden style={scored ? { marginLeft: 12 } : undefined}>
+        →
+      </span>
+    </Link>
+  );
+  // Имя view-transition должно быть уникально на странице
+  return vt ? <Vt name={vtName.game(game.id)}>{row}</Vt> : row;
+}
+
+/** Сыгранный (или идущий/отменённый) матч: две строки «логотип — команда — счёт». */
+export function ResultCard({ game, teams, now }: { game: Game; teams: TeamIndex; now?: number }) {
+  const w = winner(game);
+  const cancelled = game.status === "cancelled";
+  const live = game.status === "live";
+  const line = (id: string, name: string, s: number | undefined, side: "home" | "away") => (
+    <div className={cx("k-teamline", w && w !== side && "is-loser")}>
+      <TeamLogo name={name} logoUrl={teams.get(id)?.logoUrl} />
+      <span className="k-teamline__name">
+        <TeamDot team={teams.get(id)} />
+        {name}
+      </span>
+      <span className="k-teamline__score">{cancelled ? "—" : (s ?? "—")}</span>
+    </div>
+  );
+  return (
+    <Vt name={vtName.game(game.id)}>
+    <Link className={cx("k-card", cancelled && "k-card--muted", "k-result")} href={paths.game(game.id)}>
+      <div className="k-result__head">
+        {live ? (
+          <span className="k-status">Идёт</span>
+        ) : (
+          <span className="k-eyebrow">
+            {now != null ? dayLabel(game.scheduledAt, now, DEFAULT_LOCALE) : formatDayMonth(game.scheduledAt, DEFAULT_LOCALE)} ·{" "}
+            {gameStatusLabel(game.status).toLowerCase()}
+          </span>
+        )}
+        <span className="k-meta">{game.gymName}</span>
+      </div>
+      {line(game.homeTeamId, game.homeTeamName, game.homeScore, "home")}
+      {line(game.awayTeamId, game.awayTeamName, game.awayScore, "away")}
+    </Link>
+    </Vt>
+  );
+}
+
+/** Ближайший матч тура в календаре: рамка orange, команды с местами, две кнопки. */
+export function Fixture({
+  game,
+  teams,
+  gymLabel,
+  mapUrl,
+  homePlace,
+  awayPlace,
+  now,
+}: {
+  game: Game;
+  teams: TeamIndex;
+  gymLabel: string;
+  mapUrl?: string;
+  homePlace: string;
+  awayPlace: string;
+  now?: number;
+}) {
+  const team = (id: string, name: string, place: string) => (
+    <div className="k-fixture__team">
+      <TeamLogo name={name} logoUrl={teams.get(id)?.logoUrl} />
+      <span className="k-title">
+        <TeamDot team={teams.get(id)} />
+        {name}
+      </span>
+      {place ? (
+        <span className="k-meta" style={{ marginLeft: "auto" }}>
+          {place}
+        </span>
+      ) : null}
+    </div>
+  );
+  return (
+    <Vt name={vtName.game(game.id)}>
+    <article className="k-fixture">
+      <div className="k-fixture__head">
+        <span className="k-eyebrow k-eyebrow--accent">
+          {now != null
+            ? `${dayLabel(game.scheduledAt, now, DEFAULT_LOCALE)} · ${formatTime(game.scheduledAt, DEFAULT_LOCALE)}`
+            : formatMatchDate(game.scheduledAt, DEFAULT_LOCALE, { weekday: true })}
+        </span>
+        <span className="k-meta">{gymLabel}</span>
+      </div>
+      <div className="k-fixture__body">
+        <div className="k-fixture__teams">
+          {team(game.homeTeamId, game.homeTeamName, homePlace)}
+          <span className="k-fixture__time">{formatTime(game.scheduledAt, DEFAULT_LOCALE)}</span>
+          {team(game.awayTeamId, game.awayTeamName, awayPlace)}
+        </div>
+        <div className="k-fixture__actions">
+          {mapUrl ? (
+            <a className="k-btn k-btn--primary k-btn--sm" href={mapUrl} target="_blank" rel="noopener noreferrer">
+              Как добраться
+            </a>
+          ) : null}
+          <Link className="k-btn k-btn--quiet k-btn--sm" href={paths.game(game.id)}>
+            О матче
+          </Link>
+        </div>
+      </div>
+    </article>
+    </Vt>
+  );
+}
+
+/**
+ * Афиша ближайшего матча на главной: тёмная карточка. Ссылки внизу отдельные (зал, 2ГИС) —
+ * карточка целиком ссылкой не является; название пары ведёт на матч.
+ */
+export function Versus({
+  game,
+  teams,
+  homePlace,
+  awayPlace,
+  gymHref,
+  gymLabel,
+  mapUrl,
+  now,
+}: {
+  game: Game;
+  teams: TeamIndex;
+  homePlace: string;
+  awayPlace: string;
+  gymHref?: string;
+  gymLabel: string;
+  mapUrl?: string;
+  now?: number;
+}) {
+  // Без логотипа — майка в цвете формы (хозяева — светлая, гости — тёмная), обводка на navy
+  const t = (id: string, name: string, place: string, side: "home" | "away") => (
+    <div className="k-versus__team">
+      {teams.get(id)?.logoUrl ? (
+        <TeamLogo name={name} logoUrl={teams.get(id)?.logoUrl} dark />
+      ) : (
+        <JerseySvg kit={gameKit(teams.get(id), side)} label={firstLetter(name)} className="k-versus__kit" on="dark" />
+      )}
+      <span className="k-versus__name">{name}</span>
+      {place ? <span className="k-versus__meta">{place}</span> : null}
+    </div>
+  );
+  return (
+    <Vt name={vtName.game(game.id)}>
+    <div className="k-versus">
+      <Link className="k-versus__grid" href={paths.game(game.id)} aria-label={`Матч ${pair(game)}`}>
+        {t(game.homeTeamId, game.homeTeamName, homePlace, "home")}
+        <div className="k-versus__time">
+          <b>{game.status === "live" ? "Идёт" : formatTime(game.scheduledAt, DEFAULT_LOCALE)}</b>
+          <span className="k-versus__meta">
+            {now != null ? dayLabel(game.scheduledAt, now, DEFAULT_LOCALE) : formatDayMonth(game.scheduledAt, DEFAULT_LOCALE)}
+          </span>
+        </div>
+        {t(game.awayTeamId, game.awayTeamName, awayPlace, "away")}
+      </Link>
+      <div className="k-versus__foot">
+        {gymHref ? <Link href={gymHref}>{gymLabel}</Link> : <span>{gymLabel}</span>}
+        {mapUrl ? (
+          <a className="k-link" style={{ color: "var(--orange)" }} href={mapUrl} target="_blank" rel="noopener noreferrer">
+            Как добраться →
+          </a>
+        ) : null}
+      </div>
+    </div>
+    </Vt>
+  );
+}
+
+/** Мини-карточка следующего матча под афишей. */
+export function MiniMatch({ game, date, teams }: { game: Game; date: string; teams?: TeamIndex }) {
+  // Со справочником — маленькие майки перед названиями (хозяева светлая, гости тёмная)
+  const kit = (id: string, name: string, side: "home" | "away") =>
+    teams ? <JerseySvg kit={gameKit(teams.get(id), side)} label={firstLetter(name)} className="k-mini__kit" on="dark" /> : null;
+  return (
+    <Link className="k-mini" href={paths.game(game.id)}>
+      <span className="k-eyebrow">{date}</span>
+      {teams ? (
+        <b className="k-mini__pair">
+          <span className="k-mini__team">
+            {kit(game.homeTeamId, game.homeTeamName, "home")}
+            <span>{game.homeTeamName}</span>
+          </span>
+          <span className="k-mini__team">
+            {kit(game.awayTeamId, game.awayTeamName, "away")}
+            <span>{game.awayTeamName}</span>
+          </span>
+        </b>
+      ) : (
+        <b>{pair(game)}</b>
+      )}
+    </Link>
+  );
+}

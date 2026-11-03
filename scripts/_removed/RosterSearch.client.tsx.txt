@@ -1,0 +1,187 @@
+"use client";
+
+import { useDeferredValue, useMemo, useState } from "react";
+import Link from "next/link";
+import { PersonPhoto } from "@/components/ui/Media";
+import { paths } from "@/lib/routes";
+import type { Kit } from "@/lib/teamPalette";
+
+export interface RosterItem {
+  /** Уникальный ключ строки (id записи состава или slug игрока). */
+  key: string;
+  /** Нет — игрок удалён из базы, строка без ссылки. */
+  slug?: string;
+  name: string;
+  photoUrl?: string;
+  /** Игровой номер строкой («0», «00», «07») — выводится как есть. */
+  number?: string;
+  /** «PF/C» */
+  codes: string;
+  /** «Тяжёлый форвард, Центровой» */
+  positionsFull: string;
+  height?: number;
+  birthYear?: number;
+  isActive: boolean;
+}
+
+const FIRST = 5;
+
+function normalize(s: string): string {
+  return s.toLowerCase().replace(/ё/g, "е").trim();
+}
+
+/**
+ * Состав команды: поиск по имени или номеру (от 10 игроков), первые 5 строк, затем «Весь
+ * состав · N» раскрывает без перезагрузки. Мобилка — строки-карточки с номером слева,
+ * десктоп — таблица с колонкой «#». Без номеров у всех (старые данные) колонки нет.
+ */
+export function RosterSearch({ items, kit }: { items: RosterItem[]; kit?: Kit }) {
+  const [query, setQuery] = useState("");
+  const [all, setAll] = useState(false);
+  const q = useDeferredValue(normalize(query));
+  const filtered = useMemo(
+    // Номер: точное совпадение строки и префикс («0» находит «0», «00», «07»)
+    () => (q ? items.filter((p) => normalize(p.name).includes(q) || (p.number != null && /^\d{1,2}$/.test(q) && p.number.startsWith(q))) : items),
+    [items, q],
+  );
+  const shown = all || q ? filtered : filtered.slice(0, FIRST);
+  const numbered = items.some((p) => p.number != null);
+  const facts = (p: RosterItem) =>
+    [p.height ? `${p.height} см` : "", p.birthYear ? `${p.birthYear} г.` : ""].filter(Boolean).join(" · ");
+
+  if (items.length === 0) return <p className="k-empty">Состав пока не заявлен</p>;
+
+  return (
+    <>
+      {items.length >= 10 ? (
+        <label className="k-field k-search">
+          <span className="k-sr">Найти игрока</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Найти игрока"
+            autoComplete="off"
+          />
+        </label>
+      ) : null}
+
+      {shown.length === 0 ? <p className="k-empty">Никого не нашли</p> : null}
+
+      <div className="k-only-m k-list">
+        {shown.map((p) => {
+          const inner = (
+            <>
+              {numbered ? (
+                <span className="k-num k-rosternum k-numbadge">
+                  <span className="k-sr">Номер </span>
+                  {p.number ?? (
+                    <>
+                      <span aria-hidden>—</span>
+                      <span className="k-sr">не указан</span>
+                    </>
+                  )}
+                </span>
+              ) : null}
+              <PersonPhoto name={p.name} photoUrl={p.photoUrl} size={52} jersey={kit ? { kit, number: p.number } : undefined} />
+              <span className="k-row__body">
+                <span className="k-row__title">{p.name}</span>
+                <span className="k-meta">
+                  {p.codes ? <span className="k-pos">{p.codes}</span> : null}
+                  {p.codes && facts(p) ? "  " : null}
+                  {facts(p)}
+                </span>
+              </span>
+            </>
+          );
+          return p.slug ? (
+            <Link key={p.key} className="k-card k-row" href={paths.player(p.slug)}>
+              {inner}
+              <span className="k-arrow" aria-hidden>
+                →
+              </span>
+            </Link>
+          ) : (
+            <div key={p.key} className="k-card k-row">
+              {inner}
+            </div>
+          );
+        })}
+      </div>
+
+      {shown.length > 0 ? (
+        <div className="k-only-d">
+          <div className="k-tablewrap">
+            <table className={numbered ? "k-table k-table--roster k-table--numbered" : "k-table k-table--roster"}>
+              <thead>
+                <tr>
+                  {numbered ? (
+                    <th scope="col">
+                      <abbr title="Игровой номер">#</abbr>
+                    </th>
+                  ) : null}
+                  <th scope="col">Фото</th>
+                  <th scope="col" className="is-left">
+                    Игрок
+                  </th>
+                  <th scope="col" className="is-left">
+                    Амплуа
+                  </th>
+                  <th scope="col">Рост</th>
+                  <th scope="col">Год</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shown.map((p) => (
+                  <tr key={p.key}>
+                    {numbered ? (
+                      <td>
+                        <span className="k-num k-numbadge">{p.number ?? "—"}</span>
+                      </td>
+                    ) : null}
+                    <td>
+                      <PersonPhoto name={p.name} photoUrl={p.photoUrl} size={44} jersey={kit ? { kit, number: p.number } : undefined} />
+                    </td>
+                    <td className="is-left">
+                      {p.slug ? (
+                        <Link className="k-table__team" href={paths.player(p.slug)}>
+                          <span className="k-table__name">{p.name}</span>
+                        </Link>
+                      ) : (
+                        <span className="k-table__name">{p.name}</span>
+                      )}
+                    </td>
+                    <td className="is-left">
+                      {/* Коротко (PG/SG), полное название — в подсказке и для читалок */}
+                      {p.codes ? (
+                        <abbr className="k-pos" title={p.positionsFull}>
+                          {p.codes}
+                          <span className="k-sr"> — {p.positionsFull}</span>
+                        </abbr>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td>{p.height ?? "—"}</td>
+                    <td>{p.birthYear ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+
+      {!all && !q && items.length > FIRST ? (
+        <button
+          type="button"
+          className="k-btn k-btn--outline"
+          style={{ alignSelf: "flex-start" }}
+          onClick={() => setAll(true)}
+        >
+          Весь состав · {items.length}
+        </button>
+      ) : null}
+    </>
+  );
+}

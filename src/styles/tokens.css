@@ -1,0 +1,51 @@
+/* КБФ — токены из tokens.json (дизайн-система «КБФ — дизайн-система»). Тема одна — светлая. */
+:root {
+  --navy: #12172b;
+  --navy-deep: #0b0f1e;
+  --navy-soft: #1b2340;
+  --navy-line: #2b3559;
+  --navy-line-strong: #3b4568;
+  --on-dark: #f7f4ef;
+  --on-dark-2: #b9becf;
+  --on-dark-3: #8e93a6;
+  --on-dark-4: #5c6480;
+  --orange: #d2601f;
+  --orange-ink: #b85216;
+  --orange-bright: #ff5a1f;
+  --orange-wash: #fbf1e8;
+  --bg: #f7f4ef;
+  --surface: #ffffff;
+  --surface-muted: #f2eee6;
+  --surface-sunken: #e4ded1;
+  --line: #dbd6ca;
+  --line-soft: #e2dcd0;
+  --line-faint: #ece7dc;
+  --ink: var(--navy);
+  --text: #3f4456;
+  --text-muted: #6e6a61;
+  --text-quiet: #a29c8e;
+  --icon-quiet: #c6bfaf;
+  --focus: var(--orange);
+  --shadow-none: none;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 40px;
+  --space-12: 52px;
+  --gutter: 18px;
+  --container: 1200px;
+  --aside: 400px;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  /* --font-sans / --font-display задаёт next/font на <html> (src/app/fonts.ts).
+     Здесь — только запасные стеки на случай, если переменная не пришла. */
+  --font-sans-fallback: system-ui, sans-serif;
+  --font-display-fallback: "Arial Narrow", sans-serif;
+}

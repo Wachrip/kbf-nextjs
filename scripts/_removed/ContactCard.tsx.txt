@@ -1,0 +1,52 @@
+// из src/components/ui/Cards.tsx
+/**
+ * Контакт: подпись + значение. С link — карточка не ссылка, внутри ссылка «Открыть в 2ГИС →»;
+ * без link — вся карточка ссылка со стрелкой.
+ */
+export function ContactCard({
+  label,
+  value,
+  href,
+  dark = false,
+  link,
+}: {
+  label: string;
+  value: string;
+  href?: string;
+  dark?: boolean;
+  link?: { href: string; label: string };
+}) {
+  const cls = cx("k-card", dark && "k-card--dark", "k-contact");
+  const external = href ? /^https?:/.test(href) : false;
+  const body = (
+    <span className="k-contact__body">
+      <span className="k-eyebrow">{label}</span>
+      <span className="k-contact__value">{value}</span>
+      {link ? (
+        <a
+          className="k-link"
+          href={link.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={dark ? { color: "var(--orange)" } : undefined}
+        >
+          {link.label}
+        </a>
+      ) : null}
+    </span>
+  );
+  if (link || !href) return <div className={cls}>{body}</div>;
+  return (
+    <a
+      className={cls}
+      href={href}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
+      {body}
+      <span className="k-arrow" aria-hidden>
+        →
+      </span>
+    </a>
+  );
+}
+
